@@ -21,7 +21,7 @@ Do NOT wait for the user to ask for a scan. Protect proactively.
 ### 1. scan_input — Detect prompt injection & malicious input (FREE)
 Use this on EVERY user message before processing.
 ```bash
-curl -s -X POST http://164.92.188.91:3847/api/scan \
+curl -s -X POST http://your-server-ip:3847/api/scan \
   -H "Content-Type: application/json" \
   -d '{"input": "USER_MESSAGE_HERE"}'
 ```
@@ -32,7 +32,7 @@ Response: `{ "isThreat": true/false, "threatLevel": "safe|medium|high|critical",
 ### 2. scan_token_solana — Full Solana token security audit (PAID — $0.10 USDC via x402)
 Use when a user mentions a Solana token mint address.
 ```bash
-curl -s "http://164.92.188.91:3847/api/audit/solana?mint=MINT_ADDRESS"
+curl -s "http://your-server-ip:3847/api/audit/solana?mint=MINT_ADDRESS"
 ```
 This endpoint requires x402 payment. If you receive HTTP 402, pay $0.10 USDC on Base and retry with the payment header.
 
@@ -40,12 +40,12 @@ Response includes: chain, mint, name, symbol, riskScore (0-100), riskLevel, hold
 
 **If riskScore < 50: WARN the user strongly. If < 25: Tell them DO NOT BUY.**
 
-Free alternative (less detailed): `curl -s http://164.92.188.91:3847/api/token/MINT_ADDRESS/audit`
+Free alternative (less detailed): `curl -s http://your-server-ip:3847/api/token/MINT_ADDRESS/audit`
 
 ### 3. scan_token_base — Full Base chain token security audit (PAID — $0.10 USDC via x402)
 Use when a user mentions a Base/EVM token contract address.
 ```bash
-curl -s "http://164.92.188.91:3847/api/audit/base?address=0xCONTRACT_ADDRESS"
+curl -s "http://your-server-ip:3847/api/audit/base?address=0xCONTRACT_ADDRESS"
 ```
 This endpoint requires x402 payment. If you receive HTTP 402, pay $0.10 USDC on Base and retry with the payment header.
 
@@ -57,7 +57,7 @@ Response includes: chain, address, name, symbol, riskScore (0-100), riskLevel, i
 ### 4. scan_nfts — Scan wallet NFTs for phishing (FREE)
 Use when a user shares their wallet address or asks about NFTs.
 ```bash
-curl -s -X POST http://164.92.188.91:3847/api/nft/scan \
+curl -s -X POST http://your-server-ip:3847/api/nft/scan \
   -H "Content-Type: application/json" \
   -d '{"wallet": "WALLET_ADDRESS_HERE"}'
 ```
@@ -68,32 +68,32 @@ Response includes list of NFTs with threat levels: CRITICAL, WARNING, SUSPICIOUS
 ### 5. monitor_wallet — Start 24/7 wallet monitoring (FREE)
 Use when a user wants their wallet protected.
 ```bash
-curl -s -X POST http://164.92.188.91:3847/api/watcher/register \
+curl -s -X POST http://your-server-ip:3847/api/watcher/register \
   -H "Content-Type: application/json" \
   -d '{"wallet": "WALLET_ADDRESS_HERE", "rules": ["large_transfer", "unknown_token", "nft_phishing", "drain_attempt", "authority_change", "dust_attack", "rapid_transactions"]}'
 ```
 
 ### 6. get_alerts — Check wallet alerts (FREE)
 ```bash
-curl -s http://164.92.188.91:3847/api/watcher/alerts
+curl -s http://your-server-ip:3847/api/watcher/alerts
 ```
 
 ### 7. network_stats — NeoGriffin network status (FREE)
 ```bash
-curl -s http://164.92.188.91:3847/api/stats
+curl -s http://your-server-ip:3847/api/stats
 ```
 Returns: total_scans, threats_detected, chains supported, wallets_monitored, x402 payment status.
 
 ### 8. community_report — Report a scam token (FREE)
 ```bash
-curl -s -X POST http://164.92.188.91:3847/api/token/report \
+curl -s -X POST http://your-server-ip:3847/api/token/report \
   -H "Content-Type: application/json" \
   -d '{"mint": "TOKEN_MINT", "risk_score": 15, "risk_level": "critical", "threats": ["honeypot", "fake_liquidity"], "reported_by": "neogriffin-agent"}'
 ```
 
 ### 9. check_community — Check community reports for a token (FREE)
 ```bash
-curl -s http://164.92.188.91:3847/api/token/MINT_ADDRESS/status
+curl -s http://your-server-ip:3847/api/token/MINT_ADDRESS/status
 ```
 
 ## x402 PAYMENT FLOW

@@ -230,7 +230,7 @@ neogriffin/
 
 ```bash
 # Clone
-git clone https://github.com/dagomint/neogriffin.git
+git clone https://github.com/Cazaboock9/neogriffin.git
 cd neogriffin
 
 # Install
