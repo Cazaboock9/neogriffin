@@ -16,7 +16,7 @@ const crypto = require('crypto');
 // ============================================
 
 const CONFIG = {
-  HELIUS_KEY: '21a605c8-ec63-41d0-8a11-8521d15bfb13',
+  HELIUS_KEY: process.env.HELIUS_KEY || '',
   AEGIS_SERVER: 'http://localhost:3847',
   POLL_INTERVAL_MS: 30000, // Check every 30 seconds
   WALLETS_FILE: path.join(__dirname, 'watched-wallets.json'),
