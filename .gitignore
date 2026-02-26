@@ -1,0 +1,9 @@
+node_modules/
+.env
+aegis.db
+*.bak*
+*.working
+*.log
+.pm2/
+x402-buyer-test.mjs
+moltbook-poster.*

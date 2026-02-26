@@ -1,0 +1,31 @@
+{
+  "name": "neogriffin-server",
+  "version": "2.0.0",
+  "type": "module",
+  "description": "NeoGriffin Security API — Multi-chain token auditing with x402 micropayments",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "security",
+    "solana",
+    "base",
+    "x402",
+    "micropayments"
+  ],
+  "author": "NeoGriffin",
+  "license": "MIT",
+  "dependencies": {
+    "@x402/core": "^2.4.0",
+    "@x402/evm": "^2.4.0",
+    "@x402/express": "^2.4.0",
+    "@x402/fetch": "^2.4.0",
+    "better-sqlite3": "^12.6.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0"
+  }
+}
