@@ -13,7 +13,9 @@ import { createRequire } from 'module';
 // x402 Payment Protocol
 import { paymentMiddleware, x402ResourceServer } from '@x402/express';
 import { ExactEvmScheme } from '@x402/evm/exact/server';
+import { ExactSvmScheme } from '@x402/svm/exact/server';
 import { HTTPFacilitatorClient } from '@x402/core/server';
+import { surgePaymentMiddleware } from './surge-payment.js';
 
 // CJS compat for wallet-watcher and nft-scanner
 const require = createRequire(import.meta.url);
@@ -33,8 +35,10 @@ const PORT = 3847;
 const HELIUS_KEY = process.env.HELIUS_KEY || '';
 const HELIUS_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
 const WALLET_ADDRESS = process.env.WALLET_ADDRESS || '';
+const SOLANA_WALLET = process.env.SOLANA_WALLET || '';
+const SOLANA_NETWORK = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
 const X402_NETWORK = 'eip155:84532'; // Base Sepolia testnet (change to eip155:8453 for mainnet)
-const FACILITATOR_URL = 'https://x402.org/facilitator';
+const FACILITATOR_URL = process.env.FACILITATOR_URL || 'https://facilitator.payai.network';
 
 // ============================================
 // SECURITY MIDDLEWARE
@@ -245,37 +249,40 @@ function fetchJSON(url, options = {}) {
 // ============================================
 const facilitatorClient = new HTTPFacilitatorClient({ url: FACILITATOR_URL });
 const resourceServer = new x402ResourceServer(facilitatorClient)
-  .register(X402_NETWORK, new ExactEvmScheme());
+  .register(X402_NETWORK, new ExactEvmScheme()).register(SOLANA_NETWORK, new ExactSvmScheme());
 
 const x402Routes = {
   "GET /api/audit/solana": {
-    accepts: [{ scheme: 'exact', price: '$0.10', network: X402_NETWORK, payTo: WALLET_ADDRESS }],
+    accepts: [{ scheme: 'exact', price: '$0.10', network: X402_NETWORK, payTo: WALLET_ADDRESS }, { scheme: 'exact', price: '$0.10', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', decimals: 6 } }, { scheme: 'exact', price: '$0.10', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: '3z2tRjNuQjoq6UDcw4zyEPD1Eb5KXMPYb4GWFzVT1DPg', decimals: 9 } }],
     description: 'Full Solana token security audit — risk score, holders, liquidity, injection detection',
     mimeType: 'application/json',
   },
   "GET /api/audit/base": {
-    accepts: [{ scheme: 'exact', price: '$0.10', network: X402_NETWORK, payTo: WALLET_ADDRESS }],
+    accepts: [{ scheme: 'exact', price: '$0.10', network: X402_NETWORK, payTo: WALLET_ADDRESS }, { scheme: 'exact', price: '$0.10', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', decimals: 6 } }, { scheme: 'exact', price: '$0.10', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: '3z2tRjNuQjoq6UDcw4zyEPD1Eb5KXMPYb4GWFzVT1DPg', decimals: 9 } }],
     description: 'Full Base token security audit — honeypot detection, contract analysis, risk scoring',
     mimeType: 'application/json',
   },
   "POST /api/watcher/register": {
-    accepts: [{ scheme: 'exact', price: '$0.25', network: X402_NETWORK, payTo: WALLET_ADDRESS }],
+    accepts: [{ scheme: 'exact', price: '$0.25', network: X402_NETWORK, payTo: WALLET_ADDRESS }, { scheme: 'exact', price: '$0.25', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', decimals: 6 } }, { scheme: 'exact', price: '$0.25', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: '3z2tRjNuQjoq6UDcw4zyEPD1Eb5KXMPYb4GWFzVT1DPg', decimals: 9 } }],
     description: '24/7 wallet monitoring — real-time alerts for drains, phishing, authority changes',
     mimeType: 'application/json',
   },
   "GET /v1/score": {
-    accepts: [{ scheme: 'exact', price: '$0.01', network: X402_NETWORK, payTo: WALLET_ADDRESS }],
+    accepts: [{ scheme: 'exact', price: '$0.01', network: X402_NETWORK, payTo: WALLET_ADDRESS }, { scheme: 'exact', price: '$0.01', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', decimals: 6 } }, { scheme: 'exact', price: '$0.01', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: '3z2tRjNuQjoq6UDcw4zyEPD1Eb5KXMPYb4GWFzVT1DPg', decimals: 9 } }],
     description: 'Quick safety score for trading agents — returns score + safe_to_trade boolean',
     mimeType: 'application/json',
   },
   "POST /v1/batch-score": {
-    accepts: [{ scheme: 'exact', price: '$0.05', network: X402_NETWORK, payTo: WALLET_ADDRESS }],
+    accepts: [{ scheme: 'exact', price: '$0.05', network: X402_NETWORK, payTo: WALLET_ADDRESS }, { scheme: 'exact', price: '$0.05', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', decimals: 6 } }, { scheme: 'exact', price: '$0.05', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: '3z2tRjNuQjoq6UDcw4zyEPD1Eb5KXMPYb4GWFzVT1DPg', decimals: 9 } }],
     description: 'Batch safety scoring — up to 10 tokens per call for trading agents',
     mimeType: 'application/json',
   },
 };
 
-app.use(paymentMiddleware(x402Routes, resourceServer));
+// SURGE payment (custom verification)
+app.use(surgePaymentMiddleware);
+// x402 payment (USDC via facilitator) - skip if SURGE already paid
+app.use((req, res, next) => { if (req.surgePaid) return next(); paymentMiddleware(x402Routes, resourceServer)(req, res, next); });
 
 // ============================================
 // FREE ENDPOINTS
