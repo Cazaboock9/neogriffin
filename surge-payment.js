@@ -14,6 +14,7 @@ const PRICES = {
   '/api/watcher/register': 1200000000,
   '/v1/score':               50000000,
   '/v1/batch-score':        250000000,
+  '/api/scan/skill':        500000000,
 };
 
 export async function surgePaymentMiddleware(req, res, next) {

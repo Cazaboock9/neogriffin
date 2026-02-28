@@ -196,6 +196,8 @@ function scanInput(input) {
   if (!input || typeof input !== 'string') {
     return { isThreat: false, threatLevel: 'safe', confidence: 1.0, threats: [], patternsChecked: INJECTION_PATTERNS.length, recommendation: 'SAFE — No input provided' };
   }
+  const normalized = input.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/&#(\d+);/g, (_, c) => String.fromCharCode(c));
+  input = normalized;
   const detectedThreats = [];
   for (const p of INJECTION_PATTERNS) {
     if (p.pattern.test(input)) {
@@ -212,6 +214,49 @@ function scanInput(input) {
   else if (count === 1) { threatLevel = detectedThreats[0].severity === 'medium' ? 'medium' : 'high'; confidence = 0.7; }
   const recs = { safe: 'SAFE — No threats detected', medium: 'CAUTION — Suspicious pattern detected', high: 'WARNING — High risk patterns detected', critical: 'BLOCK — Critical threat detected, do not process' };
   return { isThreat: count > 0, threatLevel, confidence: Math.round(confidence * 100) / 100, threats: detectedThreats, patternsChecked: INJECTION_PATTERNS.length, recommendation: recs[threatLevel] || recs.safe };
+}
+// SKILL SUPPLY CHAIN SCANNER
+const SKILL_CODE_PATTERNS = [
+  { pattern: /eval\s*\(/i, category: 'code_execution', severity: 'critical', name: 'Dynamic Code Execution (eval)' },
+  { pattern: /Function\s*\(/i, category: 'code_execution', severity: 'critical', name: 'Dynamic Function Constructor' },
+  { pattern: /child_process|exec\s*\(|spawn\s*\(/i, category: 'code_execution', severity: 'critical', name: 'System Command Execution' },
+  { pattern: /atob\s*\(|btoa\s*\(|Buffer\.from\s*\([^)]*,\s*['"]base64['"]/i, category: 'obfuscation', severity: 'high', name: 'Base64 Encoding/Decoding' },
+  { pattern: /String\.fromCharCode/i, category: 'obfuscation', severity: 'high', name: 'Character Code Obfuscation' },
+  { pattern: /[1-9A-HJ-NP-Za-km-z]{32,44}/g, category: 'hardcoded_wallet', severity: 'high', name: 'Hardcoded Solana Wallet Address' },
+  { pattern: /0x[a-fA-F0-9]{40}/g, category: 'hardcoded_wallet', severity: 'high', name: 'Hardcoded EVM Wallet Address' },
+  { pattern: /process\.env/i, category: 'credential_access', severity: 'high', name: 'Environment Variable Access' },
+  { pattern: /\.env|dotenv|PRIVATE_KEY|SECRET_KEY|MNEMONIC|SEED_PHRASE/i, category: 'credential_access', severity: 'critical', name: 'Credential/Secret Access' },
+  { pattern: /fs\.(read|write|unlink|rmdir|mkdir)/i, category: 'filesystem', severity: 'high', name: 'Filesystem Operations' },
+  { pattern: /fetch\s*\(|axios|https?\.request/i, category: 'network', severity: 'medium', name: 'External Network Request' },
+  { pattern: /approve\s*\(|transferFrom|delegateTokens|setAuthority/i, category: 'token_manipulation', severity: 'critical', name: 'Token Approval/Delegation' },
+  { pattern: /signTransaction|signAllTransactions|signMessage/i, category: 'signing', severity: 'critical', name: 'Transaction Signing Request' },
+];
+
+function scanSkill(content) {
+  if (!content || typeof content !== 'string') {
+    return { isSafe: true, riskLevel: 'safe', codeThreats: [], injectionThreats: [], totalThreats: 0, recommendation: 'SAFE' };
+  }
+  const normalized = content.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+  const codeThreats = [];
+  for (const p of SKILL_CODE_PATTERNS) {
+    const regex = new RegExp(p.pattern.source, p.pattern.flags);
+    const matches = normalized.match(regex);
+    if (matches) {
+      codeThreats.push({ category: p.category, severity: p.severity, name: p.name, occurrences: matches.length });
+    }
+  }
+  const injectionResult = scanInput(normalized);
+  const injectionThreats = injectionResult.threats || [];
+  const allThreats = [...codeThreats, ...injectionThreats];
+  const hasCritical = allThreats.some(t => t.severity === 'critical');
+  const hasHigh = allThreats.some(t => t.severity === 'high');
+  const count = allThreats.length;
+  let riskLevel = 'safe';
+  if (hasCritical || count >= 5) riskLevel = 'critical';
+  else if (hasHigh || count >= 3) riskLevel = 'high';
+  else if (count >= 1) riskLevel = 'medium';
+  const recs = { safe: 'SAFE — No threats detected', medium: 'CAUTION — Review before installing', high: 'WARNING — Dangerous patterns found', critical: 'BLOCK — Likely malicious' };
+  return { isSafe: count === 0, riskLevel, codeThreats, injectionThreats, totalThreats: count, patternsChecked: SKILL_CODE_PATTERNS.length + INJECTION_PATTERNS.length, recommendation: recs[riskLevel] };
 }
 
 function secureHash(str) { return crypto.createHash('sha256').update(str).digest('hex').slice(0, 16); }
@@ -275,6 +320,11 @@ const x402Routes = {
   "POST /v1/batch-score": {
     accepts: [{ scheme: 'exact', price: '$0.05', network: X402_NETWORK, payTo: WALLET_ADDRESS }, { scheme: 'exact', price: '$0.05', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', decimals: 6 } }, { scheme: 'exact', price: '$0.05', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: '3z2tRjNuQjoq6UDcw4zyEPD1Eb5KXMPYb4GWFzVT1DPg', decimals: 9 } }],
     description: 'Batch safety scoring — up to 10 tokens per call for trading agents',
+    mimeType: 'application/json',
+  },
+  "POST /api/scan/skill": {
+    accepts: [{ scheme: 'exact', price: '$0.10', network: X402_NETWORK, payTo: WALLET_ADDRESS }, { scheme: 'exact', price: '$0.10', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', decimals: 6 } }, { scheme: 'exact', price: '$0.10', network: SOLANA_NETWORK, payTo: SOLANA_WALLET, asset: { address: '3z2tRjNuQjoq6UDcw4zyEPD1Eb5KXMPYb4GWFzVT1DPg', decimals: 9 } }],
+    description: 'Skill supply chain scanner — detects malicious code and prompt injection in OpenClaw skills',
     mimeType: 'application/json',
   },
 };
@@ -680,7 +730,29 @@ app.post('/v1/batch-score', rateLimit({ windowMs: 60000, max: 20 }), async (req,
     res.status(500).json({ error: 'Batch scoring failed', detail: e.message });
   }
 });
-
+ 
+// POST /api/scan/skill — Skill supply chain scanner (PAID)
+app.post('/api/scan/skill', rateLimit({ windowMs: 60000, max: 20 }), (req, res) => {
+  try {
+    const { content, name } = req.body;
+    if (!content || typeof content !== 'string') {
+      return res.status(400).json({ error: 'Missing "content" field' });
+    }
+    if (content.length > 50000) {
+      return res.status(400).json({ error: 'Content too large (max 50KB)' });
+    }
+    const cleaned = sanitizeString(content, 50000);
+    const result = scanSkill(cleaned);
+    const ipHash = hashIP(req.ip || req.connection?.remoteAddress);
+    try {
+      db.prepare('INSERT INTO scan_logs (input_hash, is_threat, threat_level, threats, confidence, scanner_ip) VALUES (?, ?, ?, ?, ?, ?)').run(secureHash(cleaned), result.isSafe ? 0 : 1, result.riskLevel, JSON.stringify([...result.codeThreats, ...result.injectionThreats]), result.isSafe ? 1.0 : 0.3, ipHash);
+      db.prepare('UPDATE stats SET total_scans = total_scans + 1' + (!result.isSafe ? ', total_threats_blocked = total_threats_blocked + 1' : '') + ', updated_at = CURRENT_TIMESTAMP WHERE id = 1').run();
+    } catch (e) { console.error('Skill scan log error:', e.message); }
+    res.json({ skill: name || 'unknown', ...result, payment: { method: req.surgePaid ? 'SURGE' : 'x402', amount: req.surgePaid ? '5 SURGE' : '$0.10 USDC' }, timestamp: new Date().toISOString() });
+  } catch (e) {
+    res.status(500).json({ error: 'Skill scan failed', detail: e.message });
+  }
+});
 // ============================================
 // WALLET WATCHER & NFT SCANNER (CJS modules)
 // ============================================

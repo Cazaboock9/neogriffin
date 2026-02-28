@@ -16,7 +16,7 @@
     "micropayments"
   ],
   "author": "NeoGriffin",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "@solana/spl-token": "^0.4.14",
     "@x402/core": "^2.4.0",
