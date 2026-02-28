@@ -83,6 +83,20 @@ node server.js
 
 Node.js, Express v5, better-sqlite3, Helius DAS API, DexScreener API, GoPlusLabs API, x402 protocol, SURGE token (SPL)
 
+## Roadmap
+
+**Phase 1** — Foundation ✅ (current)
+Multi-chain token audits, x402 + SURGE payments, prompt injection detection, skill supply chain scanner, wallet monitoring, NFT scanning
+
+**Phase 2** — Simulation Engine
+Pre-trade transaction simulation with real-time risk analysis
+
+**Phase 3** — Deep Analysis
+Contract-level threat intelligence and behavioral pattern detection
+
+**Phase 4** — Push Infrastructure
+Event-driven alerts for autonomous agent workflows
+
 ## License
 
 Apache-2.0
