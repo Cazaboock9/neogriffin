@@ -18,10 +18,12 @@
   "author": "NeoGriffin",
   "license": "MIT",
   "dependencies": {
+    "@solana/spl-token": "^0.4.14",
     "@x402/core": "^2.4.0",
     "@x402/evm": "^2.4.0",
     "@x402/express": "^2.4.0",
     "@x402/fetch": "^2.4.0",
+    "@x402/svm": "^2.5.0",
     "better-sqlite3": "^12.6.2",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
